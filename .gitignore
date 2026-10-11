@@ -23,6 +23,17 @@ __pycache__/
 *.py[cod]
 venv/
 env/
+.pytest_cache/
+
+# Lambda packaging output
+.aws-sam/
+backend/*/package/
+backend/*/deploy_package/
+deploy/
+*.zip
+
+# Evaluation output
+scripts/evaluation_results.json
 
 # Data folders (do not commit uploaded/processed files)
 data/
@@ -35,6 +46,10 @@ frontend/data/
 Thumbs.db
 .vscode/
 .idea/
+NUL
 
 # Logs
 *.log
+
+# Personal notes
+TODO.md

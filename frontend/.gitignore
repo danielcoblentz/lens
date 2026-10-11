@@ -21,11 +21,3 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 .vscode/
-
-
-backend/LlamaQuery/package/
-backend/LlamaParse/package/
-backend/LlamaGet/package/
-
-# Lambda deployment zips
-**/*.zip
