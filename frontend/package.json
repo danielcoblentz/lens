@@ -46,5 +46,12 @@
       "^react-router-dom$": "<rootDir>/node_modules/react-router-dom/dist/index.js",
       "^react-router/dom$": "<rootDir>/node_modules/react-router/dist/development/dom-export.js"
     }
+  },
+  "devDependencies": {
+    "@types/jest": "^27.5.2",
+    "@types/node": "^20.19.43",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "typescript": "^4.9.5"
   }
 }
