@@ -48,7 +48,7 @@ Each Lambda function lives in `backend/` and needs to be packaged with its depen
 # LlamaGet only uses boto3, which Lambda already provides
 
 # LlamaParse
-pip install PyPDF2 openai -t backend/LlamaParse
+pip install -r backend/LlamaParse/requirements.txt -t backend/LlamaParse
 
 # LlamaQuery
 pip install -r backend/LlamaQuery/requirements.txt -t backend/LlamaQuery

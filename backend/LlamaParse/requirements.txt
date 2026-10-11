@@ -1,2 +1,2 @@
 PyPDF2
-openai==1.12.0
+openai==3.29.0
