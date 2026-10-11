@@ -84,6 +84,7 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     borderLeft: "1px solid #ddd",
+    boxSizing: "border-box",
   },
   messages: {
     flex: 1,
@@ -105,6 +106,8 @@ const styles = {
   },
   input: {
     flex: 1,
+    // inputs default to about 20 characters wide, which pushed the button out of the panel
+    minWidth: 0,
     padding: "0.5rem",
   },
   button: {
