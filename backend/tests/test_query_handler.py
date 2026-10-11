@@ -1,29 +1,15 @@
-import importlib.util
 import json
-import os
 from unittest import mock
 
 import pytest
 
-BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 @pytest.fixture
-def handler(monkeypatch):
-    """llamaQuery's handler with its aws and openai clients stubbed out
-
-    llamaParse also has a module named lambda_function, so this one is loaded
-    by path under its own name instead of through sys.path
-    """
-    monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
-    monkeypatch.setenv("SESSIONS_TABLE", "sessions")
-    monkeypatch.setenv("CHUNKS_TABLE", "chunks")
-    monkeypatch.setenv("OPENAI_API_KEY", "test")
-
-    path = os.path.join(BACKEND_DIR, "LlamaQuery", "lambda_function.py")
-    spec = importlib.util.spec_from_file_location("llama_query_handler", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+def handler(load_handler):
+    # llamaQuery with its aws and openai clients stubbed out
+    module = load_handler(
+        "LlamaQuery", SESSIONS_TABLE="sessions", CHUNKS_TABLE="chunks", OPENAI_API_KEY="test"
+    )
 
     module.sessions_table = mock.Mock()
     module.sessions_table.get_item.return_value = {"Item": {"sessionId": "s1"}}

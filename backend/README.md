@@ -49,7 +49,8 @@ Copy `.env.example` to `.env` for local use. `.env` is git-ignored; never commit
 Sessions table, partition key `sessionId`:
 
 - `sessionId` (string)
-- `status` - `AWAITING_UPLOAD` on creation, `READY_FOR_QUERY` once parsing finishes
+- `status` - `AWAITING_UPLOAD` on creation, `PROCESSING` while LlamaParse runs, then `READY_FOR_QUERY` or `ERROR`
+- `error` - a user-facing message, set only when `status` is `ERROR`
 - `createdAt` - ISO 8601 timestamp
 - `s3Key` - `uploads/{sessionId}.pdf`
 

@@ -1,4 +1,5 @@
 import json
+import logging
 import boto3
 import os
 from decimal import Decimal
@@ -16,6 +17,9 @@ pdf_bucket_name = os.environ["BUCKET_NAME"]
 
 openai_client = OpenAI()
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 
 def generate_embedding(text):
     response = openai_client.embeddings.create(
@@ -23,6 +27,22 @@ def generate_embedding(text):
         input=text
     )
     return response.data[0].embedding
+
+
+def set_session_status(session_id, status, error=None):
+    update = "SET #s = :status"
+    names = {"#s": "status"}
+    values = {":status": status}
+    if error is not None:
+        update += ", #e = :error"
+        names["#e"] = "error"
+        values[":error"] = error
+    sessions_table.update_item(
+        Key={"sessionId": session_id},
+        UpdateExpression=update,
+        ExpressionAttributeNames=names,
+        ExpressionAttributeValues=values
+    )
 
 
 def lambda_handler(event, context):
@@ -34,7 +54,32 @@ def lambda_handler(event, context):
     file_name = uploaded_key.split("/")[-1]
     session_id = file_name.replace(".pdf", "")
 
-    # download and extract text from the pdf
+    # the frontend polls this status, so it has to land in a terminal state either way
+    set_session_status(session_id, "PROCESSING")
+    try:
+        chunk_count = parse_document(session_id, source_bucket, uploaded_key)
+    except Exception:
+        logger.exception("parsing failed for session %s", session_id)
+        set_session_status(session_id, "ERROR", error="The document could not be processed.")
+        raise
+
+    # a scanned pdf has no text layer, so there is nothing to search
+    if chunk_count == 0:
+        set_session_status(session_id, "ERROR", error="No text could be extracted from this PDF.")
+    else:
+        # llamaQuery only answers once the session is ready
+        set_session_status(session_id, "READY_FOR_QUERY")
+
+    return {
+        "statusCode": 200,
+        "body": json.dumps({
+            "sessionId": session_id,
+            "chunksCreated": chunk_count
+        })
+    }
+
+
+def parse_document(session_id, source_bucket, uploaded_key):
     local_path = f"/tmp/{session_id}.pdf"
     s3_client.download_file(source_bucket, uploaded_key, local_path)
 
@@ -60,18 +105,4 @@ def lambda_handler(event, context):
             "order": i
         })
 
-    # mark session as ready so llamaQuery knows it can accept questions
-    sessions_table.update_item(
-        Key={"sessionId": session_id},
-        UpdateExpression="SET #s = :status",
-        ExpressionAttributeNames={"#s": "status"},
-        ExpressionAttributeValues={":status": "READY_FOR_QUERY"}
-    )
-
-    return {
-        "statusCode": 200,
-        "body": json.dumps({
-            "sessionId": session_id,
-            "chunksCreated": len(text_chunks)
-        })
-    }
+    return len(text_chunks)
