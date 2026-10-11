@@ -1,7 +1,13 @@
 import React from "react";
+import { FileMeta, UploadPhase, UploadStatus } from "../types";
 
 // Status indicator component
-function StatusBadge({ status, progress }) {
+interface StatusBadgeProps {
+  status: UploadPhase;
+  progress: number;
+}
+
+function StatusBadge({ status, progress }: StatusBadgeProps) {
   const getStatusStyle = () => {
     switch (status) {
       case "uploading":
@@ -40,7 +46,13 @@ function StatusBadge({ status, progress }) {
 }
 
 // holds files the user will upload and later review the contents
-function Sidebar({ files, onSelect, uploadStatus = {} }) {
+interface SidebarProps {
+  files: FileMeta[];
+  onSelect: (file: FileMeta) => void;
+  uploadStatus?: Record<string, UploadStatus>;
+}
+
+function Sidebar({ files, onSelect, uploadStatus = {} }: SidebarProps) {
   return (
     <div style={styles.sidebar}>
       <h2 style={styles.title}>Lens</h2>
@@ -68,7 +80,7 @@ function Sidebar({ files, onSelect, uploadStatus = {} }) {
   );
 }
 
-const styles = {
+const styles: Record<string, React.CSSProperties> = {
   sidebar: {
     width: "250px",
     height: "100vh",

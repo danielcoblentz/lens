@@ -1,8 +1,13 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { queryRAG } from "../services/aws";
+import { Message } from "../types";
 
-function ChatBox({ sessionId }) {
-  const [messages, setMessages] = useState([]);
+interface ChatBoxProps {
+  sessionId: string | null;
+}
+
+function ChatBox({ sessionId }: ChatBoxProps) {
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -27,9 +32,10 @@ function ChatBox({ sessionId }) {
       ]);
     } catch (error) {
       console.error("Query failed:", error);
+      const message = error instanceof Error ? error.message : String(error);
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: `Error: ${error.message}` },
+        { role: "assistant", content: `Error: ${message}` },
       ]);
     } finally {
       setIsLoading(false);
@@ -77,7 +83,7 @@ function ChatBox({ sessionId }) {
   );
 }
 
-const styles = {
+const styles: Record<string, React.CSSProperties> = {
   container: {
     width: "250px",
     height: "100vh",
