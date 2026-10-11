@@ -41,7 +41,7 @@ function FileViewer({ selectedFile }: FileViewerProps) {
         onLoadSuccess={({ numPages }) => setNumPages(numPages)}
         onLoadError={(e) => console.error("Error loading PDF:", e)}
       >
-        {/* Only render pages after the PDF reports its page count */}
+        {/* the page count is unknown until the document loads */}
         {numPages &&
           [...Array(numPages).keys()].map((i) => (
             <Page key={i} pageNumber={i + 1} width={650} />
@@ -51,7 +51,6 @@ function FileViewer({ selectedFile }: FileViewerProps) {
   );
 }
 
-// Inline styles for the PDF viewer
 const styles: Record<string, React.CSSProperties> = {
   viewer: {
     padding: "2rem",

@@ -1,14 +1,11 @@
-// AWS API service for communicating with Lambda endpoints
+// client for the lens api gateway endpoints
 import { PresignResponse, QueryResponse } from "../types";
 
 const API_BASE = process.env.REACT_APP_API_BASE || "";
 
 export type UploadProgressCallback = (percentComplete: number) => void;
 
-/**
- * Get a presigned URL for uploading a PDF to S3
- * Also creates a session in DynamoDB with AWAITING_UPLOAD status
- */
+// opens a session and returns a presigned s3 url to upload the pdf to
 export async function getPresignedUploadUrl(): Promise<PresignResponse> {
   const response = await fetch(`${API_BASE}/llamaGet`, {
     method: "POST",
@@ -29,10 +26,7 @@ export async function getPresignedUploadUrl(): Promise<PresignResponse> {
   };
 }
 
-/**
- * Upload a file directly to S3 using a presigned URL
- * Uses XMLHttpRequest because fetch does not report upload progress
- */
+// xhr instead of fetch because fetch does not report upload progress
 export function uploadFileToS3(
   presignedUrl: string,
   file: File,
@@ -66,12 +60,7 @@ export function uploadFileToS3(
   });
 }
 
-/**
- * Upload a PDF file to AWS
- * 1. Gets presigned URL from Lambda (creates session)
- * 2. Uploads file directly to S3
- * 3. S3 upload triggers LlamaParse Lambda automatically
- */
+// the s3 upload is what triggers parsing, so the session id is all the caller needs back
 export async function uploadPDF(
   file: File,
   onProgress?: UploadProgressCallback
@@ -81,9 +70,6 @@ export async function uploadPDF(
   return { sessionId };
 }
 
-/**
- * Query the RAG pipeline with a question
- */
 export async function queryRAG(sessionId: string, query: string): Promise<QueryResponse> {
   const response = await fetch(`${API_BASE}/query`, {
     method: "POST",

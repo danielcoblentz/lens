@@ -11,23 +11,21 @@ function Home() {
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   // keyed by file name
   const [uploadStatus, setUploadStatus] = useState<Record<string, UploadStatus>>({});
-  // the File objects themselves, which react-pdf needs to render
+  // the file objects themselves, which react-pdf needs to render
   const filesRef = useRef<File[]>([]);
 
   const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || []);
 
     for (const file of selected) {
-      // Only allow PDFs -- may update later for multiple formats
+      // the parser only handles pdfs
       if (file.type !== "application/pdf") {
         alert(`${file.name} is not a PDF file`);
         continue;
       }
 
-      // store file object
       filesRef.current = [...filesRef.current, file];
 
-      // Add metadata for UI
       const meta = {
         name: file.name,
         size: file.size,
@@ -36,14 +34,12 @@ function Home() {
       };
       setFilesMeta((prev) => [...prev, meta]);
 
-      // initial upload status
       setUploadStatus((prev) => ({
         ...prev,
         [file.name]: { progress: 0, status: "uploading", sessionId: null },
       }));
 
       try {
-        // upload to S3 via presigned URL
         const { sessionId } = await uploadPDF(file, (progress) => {
           setUploadStatus((prev) => ({
             ...prev,
@@ -51,7 +47,7 @@ function Home() {
           }));
         });
 
-        // update status to processing (S3 triggers LlamaParse)
+        // the s3 upload event starts llamaParse on the backend
         setUploadStatus((prev) => ({
           ...prev,
           [file.name]: { progress: 100, status: "processing", sessionId },
@@ -81,7 +77,6 @@ function Home() {
   };
 
   const handleSelect = (fileMeta: FileMeta) => {
-    // find the file object that matches the metadata
     const actualFile = filesRef.current.find(
       (f) =>
         f.name === fileMeta.name &&
@@ -90,19 +85,16 @@ function Home() {
 
     setSelectedFile(actualFile || null);
 
-    //  set active session ID for querying
     const status = uploadStatus[fileMeta.name];
-    // always update sessionId (set to null if not available yet)
+    // a file still uploading has no session yet, so chat stays disabled
     setActiveSessionId(status?.sessionId || null);
   };
 
   return (
     <div style={{ display: "flex", height: "100vh" }}>
 
-      {/* LEFT: Sidebar */}
       <Sidebar files={filesMeta} onSelect={handleSelect} uploadStatus={uploadStatus} />
 
-      {/* MIDDLE: Viewer + Upload area */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <div style={{ padding: "2rem" }}>
           <h1>Upload Files</h1>

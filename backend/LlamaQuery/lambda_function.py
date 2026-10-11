@@ -29,7 +29,7 @@ def get_query_embedding(query_text):
 
 
 def get_session_chunks(session_id):
-    # a dynamodb query stops at 1 MB, so follow LastEvaluatedKey until every chunk is read
+    # a dynamodb query stops at 1 mb, so follow LastEvaluatedKey until every chunk is read
     query_args = {"KeyConditionExpression": Key("sessionId").eq(session_id)}
     chunks = []
     while True:

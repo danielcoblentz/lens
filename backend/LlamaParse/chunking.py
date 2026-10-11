@@ -1,12 +1,9 @@
-"""Text chunking for LlamaParse.
-
-Kept free of AWS and OpenAI imports so it can be imported and tested on its own.
-"""
+# text chunking for llamaParse, kept free of aws and openai imports so it can be tested on its own
 
 
 def recursive_chunk_text(text, chunk_size=800, chunk_overlap=100, separators=None):
-    """split text by trying separators in order: paragraphs, lines, sentences, words.
-    overlap between chunks keeps context at the boundaries."""
+    """split on the largest unit that fits: paragraphs, then lines, sentences, and words,
+    with overlap so a clause cut at a boundary still appears whole in one chunk"""
     if separators is None:
         separators = ["\n\n", "\n", ". ", " "]
 

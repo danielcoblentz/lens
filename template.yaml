@@ -23,7 +23,7 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: Prod
-      # the handlers set CORS headers themselves; this answers the preflight
+      # the handlers set cors headers themselves, this answers the preflight
       Cors:
         AllowOrigin: "'*'"
         AllowHeaders: "'Content-Type'"
@@ -75,7 +75,7 @@ Resources:
           BUCKET_NAME: !Ref UploadBucketName
           TABLE_NAME: !Ref SessionsTable
       Policies:
-        # the presigned URL is signed with this role, so it needs the upload right
+        # the presigned url is signed with this role, so it needs the upload right
         - S3WritePolicy:
             BucketName: !Ref UploadBucketName
         - DynamoDBWritePolicy:

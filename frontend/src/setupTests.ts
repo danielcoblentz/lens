@@ -1,7 +1,7 @@
 // adds dom matchers like toBeInTheDocument and toBeDisabled to expect
 import '@testing-library/jest-dom';
 
-// the jsdom build CRA pins predates TextEncoder and TextDecoder, which react-router needs
+// the jsdom build cra pins predates TextEncoder and TextDecoder, which react-router needs
 import { TextEncoder, TextDecoder } from 'util';
 
 if (typeof global.TextEncoder === 'undefined') {

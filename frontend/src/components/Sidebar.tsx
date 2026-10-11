@@ -1,7 +1,7 @@
 import React from "react";
 import { FileMeta, UploadPhase, UploadStatus } from "../types";
 
-// Status indicator component
+// shows where a file is in the upload, parse, ready pipeline
 interface StatusBadgeProps {
   status: UploadPhase;
   progress: number;

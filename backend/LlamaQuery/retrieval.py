@@ -1,7 +1,4 @@
-"""Similarity search for LlamaQuery.
-
-Kept free of AWS and OpenAI imports so it can be imported and tested on its own.
-"""
+# similarity search for llamaQuery, kept free of aws and openai imports so it can be tested on its own
 
 import math
 
@@ -16,11 +13,10 @@ def cosine_similarity(vec_a, vec_b):
 
 
 def rank_chunks(query_embedding, chunks, top_k=DEFAULT_TOP_K):
-    """score every chunk against the query embedding and return the best ones.
+    """return the top_k (similarity, text) pairs, most similar first
 
-    chunks are DynamoDB items, so embeddings come back as Decimal and need
-    converting to float first. chunks with no embedding are skipped.
-    returns a list of (similarity, text) sorted from most to least similar.
+    chunks are dynamodb items, so embeddings arrive as decimals, and chunks
+    without an embedding are skipped
     """
     scored = []
     for chunk in chunks:

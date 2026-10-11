@@ -10,10 +10,10 @@ BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 @pytest.fixture
 def handler(monkeypatch):
-    """load LlamaQuery's lambda_function with its AWS and OpenAI clients stubbed out.
+    """llamaQuery's handler with its aws and openai clients stubbed out
 
-    LlamaParse also has a module named lambda_function, so it is loaded by path
-    under its own name instead of through sys.path.
+    llamaParse also has a module named lambda_function, so this one is loaded
+    by path under its own name instead of through sys.path
     """
     monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
     monkeypatch.setenv("SESSIONS_TABLE", "sessions")
@@ -47,7 +47,7 @@ def chunk(i):
 
 
 def test_reads_every_page_of_chunks(handler):
-    # dynamodb stops a query at 1 MB and hands back LastEvaluatedKey to resume from
+    # dynamodb stops a query at 1 mb and hands back LastEvaluatedKey to resume from
     handler.chunks_table.query.side_effect = [
         {"Items": [chunk(0), chunk(1)], "LastEvaluatedKey": {"chunkId": "chunk_1"}},
         {"Items": [chunk(2)], "LastEvaluatedKey": {"chunkId": "chunk_2"}},

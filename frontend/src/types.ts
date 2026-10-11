@@ -21,13 +21,13 @@ export interface Message {
   content: string;
 }
 
-// POST /llamaGet
+// returned by /llamaGet
 export interface PresignResponse {
   sessionId: string;
   uploadUrl: string;
 }
 
-// POST /query
+// returned by /query
 export interface QueryResponse {
   sessionId: string;
   answer: string;
