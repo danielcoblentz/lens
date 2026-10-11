@@ -1,5 +1,5 @@
 // client for the lens api gateway endpoints
-import { PresignResponse, QueryResponse } from "../types";
+import { PresignResponse, QueryResponse, SessionStatusResponse } from "../types";
 
 const API_BASE = process.env.REACT_APP_API_BASE || "";
 
@@ -68,6 +68,47 @@ export async function uploadPDF(
   const { sessionId, uploadUrl } = await getPresignedUploadUrl();
   await uploadFileToS3(uploadUrl, file, onProgress);
   return { sessionId };
+}
+
+export async function fetchSessionStatus(sessionId: string): Promise<SessionStatusResponse> {
+  const response = await fetch(`${API_BASE}/sessions/${encodeURIComponent(sessionId)}`);
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Status check failed: ${error}`);
+  }
+
+  return response.json();
+}
+
+export interface WaitOptions {
+  intervalMs?: number;
+  timeoutMs?: number;
+  signal?: AbortSignal;
+}
+
+// parsing runs asynchronously off the s3 upload event, so poll until it lands on ready or error
+export async function waitForSession(
+  sessionId: string,
+  { intervalMs = 2000, timeoutMs = 5 * 60 * 1000, signal }: WaitOptions = {}
+): Promise<SessionStatusResponse> {
+  const deadline = Date.now() + timeoutMs;
+
+  while (true) {
+    if (signal?.aborted) {
+      throw new Error("Stopped waiting for the document");
+    }
+
+    const result = await fetchSessionStatus(sessionId);
+    if (result.status === "READY_FOR_QUERY" || result.status === "ERROR") {
+      return result;
+    }
+
+    if (Date.now() + intervalMs > deadline) {
+      throw new Error("Timed out waiting for the document to finish processing");
+    }
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
 }
 
 export async function queryRAG(sessionId: string, query: string): Promise<QueryResponse> {

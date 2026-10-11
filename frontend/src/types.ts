@@ -33,3 +33,12 @@ export interface QueryResponse {
   answer: string;
   metrics?: Record<string, number | boolean>;
 }
+
+export type SessionStatus = "AWAITING_UPLOAD" | "PROCESSING" | "READY_FOR_QUERY" | "ERROR";
+
+// returned by /sessions/{sessionId}
+export interface SessionStatusResponse {
+  sessionId: string;
+  status: SessionStatus;
+  error?: string;
+}
