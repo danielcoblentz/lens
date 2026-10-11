@@ -4,7 +4,7 @@ A serverless document analysis tool that lets users upload legal contracts and a
 
 ## System Design
 
-The source diagram lives in [`System_architecture/design.excalidraw`](System_architecture/design.excalidraw), which you can open at [excalidraw.com](https://excalidraw.com).
+The source diagram lives in [`docs/architecture.excalidraw`](docs/architecture.excalidraw), which you can open at [excalidraw.com](https://excalidraw.com).
 
 The system is split into three Lambda functions connected by S3 events and API Gateway:
 
@@ -15,6 +15,16 @@ The system is split into three Lambda functions connected by S3 events and API G
 **LlamaQuery** handles the question-answering flow. It embeds the user's question, retrieves all stored chunks for that session, ranks them by cosine similarity, selects the most relevant ones, and sends them to the LLM with a legal analysis prompt. The response is returned along with latency metrics.
 
 Storage is split between S3 for raw PDFs and DynamoDB for session metadata, text chunks, and embedding vectors. All external communication goes through API Gateway over HTTPS.
+
+## Project Layout
+
+```
+backend/     one folder per Lambda function, plus the pytest suite
+frontend/    React app (Create React App)
+docs/        architecture diagram and its Excalidraw source
+samples/     sample contract for manual testing
+template.yaml  SAM template for the whole stack
+```
 
 ## Getting Started
 
@@ -30,16 +40,16 @@ The dev server starts at [http://localhost:3000](http://localhost:3000). API end
 
 ### Backend
 
-Each Lambda function lives in `Backend/` and needs to be packaged with its dependencies before deploying to AWS:
+Each Lambda function lives in `backend/` and needs to be packaged with its dependencies before deploying to AWS:
 
 ```bash
 # LlamaGet only uses boto3, which Lambda already provides
 
 # LlamaParse
-pip install PyPDF2 openai -t Backend/LlamaParse
+pip install PyPDF2 openai -t backend/LlamaParse
 
 # LlamaQuery
-pip install -r Backend/LlamaQuery/requirements.txt -t Backend/LlamaQuery
+pip install -r backend/LlamaQuery/requirements.txt -t backend/LlamaQuery
 ```
 
 ### Deploying
@@ -80,7 +90,7 @@ or API key:
 
 ```bash
 pip install pytest
-python -m pytest Backend/tests
+python -m pytest backend/tests
 ```
 
 ## Usage

@@ -69,7 +69,7 @@ Resources:
   LlamaGetFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: Backend/LlamaGet/
+      CodeUri: backend/LlamaGet/
       Environment:
         Variables:
           BUCKET_NAME: !Ref UploadBucketName
@@ -91,7 +91,7 @@ Resources:
   LlamaParseFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: Backend/LlamaParse/
+      CodeUri: backend/LlamaParse/
       Environment:
         Variables:
           BUCKET_NAME: !Ref UploadBucketName
@@ -120,7 +120,7 @@ Resources:
   LlamaQueryFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: Backend/LlamaQuery/
+      CodeUri: backend/LlamaQuery/
       Environment:
         Variables:
           SESSIONS_TABLE: !Ref SessionsTable
