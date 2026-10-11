@@ -25,6 +25,7 @@ backend/     one folder per Lambda function, plus the pytest suite
 frontend/    React app (Create React App)
 docs/        architecture diagram and its Excalidraw source
 samples/     sample contract for manual testing
+scripts/     retrieval quality checks
 template.yaml  SAM template for the whole stack
 ```
 
