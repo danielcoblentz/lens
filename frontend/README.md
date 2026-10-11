@@ -26,4 +26,4 @@ Add your API base and any defaults via environment variables (CRA uses `REACT_AP
 
 ## Notes
 - This project uses Create React App (not Vite). Use `npm start`/`npm run build` from CRA scripts.
-- Ensure `react-pdf` worker is reachable (see `FileViewer.js` for workerSrc config).
+- `npm start` and `npm run build` first copy the pdf.js worker from `pdfjs-dist` into `public/`, and `FileViewer.js` loads it from there.

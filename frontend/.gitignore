@@ -21,3 +21,6 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 .vscode/
+
+# copied from pdfjs-dist by the copy-pdf-worker script
+public/pdf.worker.min.mjs
