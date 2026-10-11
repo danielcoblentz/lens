@@ -87,11 +87,11 @@ cd frontend
 npm test
 ```
 
-The chunking and retrieval logic is covered by pytest and needs no AWS credentials
-or API key:
+The chunking, retrieval, and query handler logic is covered by pytest. AWS and OpenAI
+clients are stubbed, so no credentials or API key are needed:
 
 ```bash
-pip install pytest
+pip install -r backend/requirements-dev.txt
 python -m pytest backend/tests
 ```
 

@@ -28,6 +28,18 @@ def get_query_embedding(query_text):
     return response.data[0].embedding
 
 
+def get_session_chunks(session_id):
+    # a dynamodb query stops at 1 MB, so follow LastEvaluatedKey until every chunk is read
+    query_args = {"KeyConditionExpression": Key("sessionId").eq(session_id)}
+    chunks = []
+    while True:
+        response = chunks_table.query(**query_args)
+        chunks.extend(response.get("Items", []))
+        if "LastEvaluatedKey" not in response:
+            return chunks
+        query_args["ExclusiveStartKey"] = response["LastEvaluatedKey"]
+
+
 def lambda_handler(event, context):
     start_time = time.time()
     metrics = {}
@@ -46,10 +58,7 @@ def lambda_handler(event, context):
     query_embedding = get_query_embedding(question)
     metrics["embedding_time_ms"] = round((time.time() - embed_start) * 1000)
 
-    chunks_response = chunks_table.query(
-        KeyConditionExpression=Key("sessionId").eq(session_id)
-    )
-    chunks = chunks_response.get("Items", [])
+    chunks = get_session_chunks(session_id)
 
     if not chunks:
         return {"statusCode": 404, "headers": CORS_HEADERS,

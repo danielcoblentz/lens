@@ -106,10 +106,10 @@ frontend's `REACT_APP_API_BASE`.
 
 ## Tests
 
-The chunking and retrieval modules are covered by pytest and need no AWS credentials:
+The chunking, retrieval, and query handler logic is covered by pytest with AWS and OpenAI stubbed out:
 
 ```bash
-pip install pytest
+pip install -r requirements-dev.txt
 python -m pytest tests
 ```
 
