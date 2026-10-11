@@ -71,7 +71,7 @@ It prompts for the bucket name and the OpenAI key, then outputs `ApiBaseUrl` to 
 
 ### Environment Variables
 
-Set these in the Lambda console for each function:
+`template.yaml` sets these on each function. Set them by hand only when deploying a function outside the template:
 
 | Function | Variables |
 |----------|-----------|
