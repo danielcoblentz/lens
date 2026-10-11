@@ -27,7 +27,7 @@ Resources:
       Cors:
         AllowOrigin: "'*'"
         AllowHeaders: "'Content-Type'"
-        AllowMethods: "'POST,OPTIONS'"
+        AllowMethods: "'GET,POST,OPTIONS'"
 
   UploadBucket:
     Type: AWS::S3::Bucket
@@ -138,6 +138,25 @@ Resources:
             RestApiId: !Ref Api
             Path: /query
             Method: post
+
+  LlamaStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/LlamaStatus/
+      Timeout: 10
+      Environment:
+        Variables:
+          SESSIONS_TABLE: !Ref SessionsTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        Get:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /sessions/{sessionId}
+            Method: get
 
 Outputs:
   ApiBaseUrl:

@@ -1,0 +1,1 @@
+# only the standard library and boto3, which the lambda runtime provides

@@ -8,13 +8,15 @@ A serverless document analysis tool that lets users upload legal contracts and a
 
 The source diagram lives in [`docs/architecture.excalidraw`](docs/architecture.excalidraw), which you can open at [excalidraw.com](https://excalidraw.com).
 
-The system is split into three Lambda functions connected by S3 events and API Gateway:
+The system is split into four Lambda functions connected by S3 events and API Gateway:
 
 **LlamaGet** handles session creation. When a user uploads a file, the frontend requests a presigned S3 URL and a new session ID. The PDF is uploaded directly from the browser to S3, keeping Lambda out of the data path.
 
-**LlamaParse** is triggered automatically by the S3 upload event. It downloads the PDF, extracts text, splits it into overlapping chunks using recursive hierarchical separators, generates vector embeddings for each chunk via OpenAI, and stores everything in DynamoDB. Once done, it marks the session as ready for queries.
+**LlamaParse** is triggered automatically by the S3 upload event. It downloads the PDF, extracts text, splits it into overlapping chunks using recursive hierarchical separators, generates vector embeddings for each chunk via OpenAI, and stores everything in DynamoDB. The session reads `PROCESSING` while it works, then `READY_FOR_QUERY`, or `ERROR` with a message if the PDF cannot be parsed.
 
 **LlamaQuery** handles the question-answering flow. It embeds the user's question, retrieves all stored chunks for that session, ranks them by cosine similarity, selects the most relevant ones, and sends them to the LLM with a legal analysis prompt. The response is returned along with latency metrics.
+
+**LlamaStatus** reports a session's parse state. The frontend polls it after an upload, so a document only shows as ready once it can actually be queried.
 
 Storage is split between S3 for raw PDFs and DynamoDB for session metadata, text chunks, and embedding vectors. All external communication goes through API Gateway over HTTPS.
 
@@ -58,7 +60,7 @@ pip install -r backend/LlamaQuery/requirements.txt -t backend/LlamaQuery
 ### Deploying
 
 `template.yaml` is a SAM template that creates everything the functions need: the
-upload bucket, the sessions and chunks tables, the three functions with their IAM
+upload bucket, the sessions and chunks tables, the four functions with their IAM
 roles, the API Gateway routes, and the S3 event notification on the `uploads/` prefix.
 
 ```bash
@@ -78,6 +80,7 @@ It prompts for the bucket name and the OpenAI key, then outputs `ApiBaseUrl` to 
 | LlamaGet | `BUCKET_NAME`, `TABLE_NAME` |
 | LlamaParse | `BUCKET_NAME`, `SESSIONS_TABLE`, `CHUNKS_TABLE`, `OPENAI_API_KEY` |
 | LlamaQuery | `SESSIONS_TABLE`, `CHUNKS_TABLE`, `OPENAI_API_KEY` |
+| LlamaStatus | `SESSIONS_TABLE` |
 
 ## Tests
 

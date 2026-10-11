@@ -1,10 +1,11 @@
 ## Architecture
 
-Three independent Lambda functions, each deployed as its own zip:
+Four independent Lambda functions, each deployed as its own zip:
 
 - `LlamaGet/lambda_function.py` - creates a session, returns a presigned S3 upload URL.
 - `LlamaParse/lambda_function.py` - triggered by the S3 upload event, extracts and chunks the PDF text, embeds each chunk, writes the chunks to DynamoDB.
 - `LlamaQuery/lambda_function.py` - embeds a question, ranks the stored chunks by cosine similarity, and prompts the LLM with the highest scoring ones.
+- `LlamaStatus/lambda_function.py` - returns a session's parse status for the frontend to poll.
 
 The pure logic is kept out of the handlers so it can be tested without AWS or OpenAI:
 
@@ -34,6 +35,7 @@ pip install -r LlamaQuery/requirements.txt -t LlamaQuery
 | LlamaGet | `BUCKET_NAME`, `TABLE_NAME` |
 | LlamaParse | `BUCKET_NAME`, `SESSIONS_TABLE`, `CHUNKS_TABLE`, `OPENAI_API_KEY` |
 | LlamaQuery | `SESSIONS_TABLE`, `CHUNKS_TABLE`, `OPENAI_API_KEY` |
+| LlamaStatus | `SESSIONS_TABLE` |
 
 `TABLE_NAME` and `SESSIONS_TABLE` refer to the same sessions table; the two functions
 just read it under different names. `OPENAI_API_KEY` is read by the OpenAI client
@@ -63,7 +65,7 @@ Chunks table, partition key `sessionId` and sort key `chunkId`:
 
 ## API
 
-Both routes are POST, fronted by API Gateway.
+All routes are fronted by API Gateway.
 
 `POST /llamaGet` takes no body.
 
@@ -83,18 +85,27 @@ Both routes are POST, fronted by API Gateway.
 
 Returns 404 if the session is unknown or has no chunks yet.
 
+`GET /sessions/{sessionId}`:
+
+```json
+{ "sessionId": "…", "status": "ERROR", "error": "No text could be extracted from this PDF." }
+```
+
+`error` is present only when `status` is `ERROR`. Returns 404 if the session is unknown.
+
 ## Workflows
 
 Upload: `POST /llamaGet` creates the session and returns a presigned URL, the browser
 PUTs the PDF straight to S3, and the object-created event on the `uploads/` prefix
-triggers LlamaParse, which flips the session to `READY_FOR_QUERY`.
+triggers LlamaParse, which moves the session to `PROCESSING` and then `READY_FOR_QUERY` or `ERROR`.
+The frontend polls `GET /sessions/{sessionId}` until it sees one of those two.
 
 Query: `POST /query` embeds the question, scores every chunk stored for the session,
 and sends the top five to the LLM.
 
 ## Deployment
 
-`template.yaml` in the repo root is a SAM template covering all three functions, the
+`template.yaml` in the repo root is a SAM template covering all four functions, the
 bucket, both tables, the IAM roles, the API Gateway routes, and the S3 notification.
 
 ```bash
