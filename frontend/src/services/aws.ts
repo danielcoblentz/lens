@@ -1,23 +1,22 @@
-//AWS API service for communicating with Lambda endpoints
-const API_BASE = process.env.REACT_APP_API_BASE || '';
+// AWS API service for communicating with Lambda endpoints
+import { PresignResponse, QueryResponse } from "../types";
+
+const API_BASE = process.env.REACT_APP_API_BASE || "";
+
+export type UploadProgressCallback = (percentComplete: number) => void;
 
 /**
  * Get a presigned URL for uploading a PDF to S3
  * Also creates a session in DynamoDB with AWAITING_UPLOAD status
- * @returns {Promise<{sessionId: string, uploadUrl: string}>}
  */
-
-
-
-export async function getPresignedUploadUrl() {
+export async function getPresignedUploadUrl(): Promise<PresignResponse> {
   const response = await fetch(`${API_BASE}/llamaGet`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 
-  //log the error
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`Failed to get presigned URL: ${error}`);
@@ -30,29 +29,26 @@ export async function getPresignedUploadUrl() {
   };
 }
 
-
-
 /**
  * Upload a file directly to S3 using a presigned URL
- * @param {string} presignedUrl - The presigned URL from getPresignedUploadUrl
- * @param {File} file - The PDF file to upload
- * @param {function} onProgress -  callback for upload progress (0-100)
- * @returns {Promise<void>}
+ * Uses XMLHttpRequest because fetch does not report upload progress
  */
-
-
-export async function uploadFileToS3(presignedUrl, file, onProgress) {
+export function uploadFileToS3(
+  presignedUrl: string,
+  file: File,
+  onProgress?: UploadProgressCallback
+): Promise<void> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
-    xhr.upload.addEventListener('progress', (event) => {
+    xhr.upload.addEventListener("progress", (event) => {
       if (event.lengthComputable && onProgress) {
         const percentComplete = Math.round((event.loaded / event.total) * 100);
         onProgress(percentComplete);
       }
     });
 
-    xhr.addEventListener('load', () => {
+    xhr.addEventListener("load", () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve();
       } else {
@@ -60,53 +56,39 @@ export async function uploadFileToS3(presignedUrl, file, onProgress) {
       }
     });
 
-    xhr.addEventListener('error', () => {
-      reject(new Error('Upload failed due to network error'));
+    xhr.addEventListener("error", () => {
+      reject(new Error("Upload failed due to network error"));
     });
 
-    xhr.open('PUT', presignedUrl);
-    xhr.setRequestHeader('Content-Type', 'application/pdf');
+    xhr.open("PUT", presignedUrl);
+    xhr.setRequestHeader("Content-Type", "application/pdf");
     xhr.send(file);
   });
 }
-
-
 
 /**
  * Upload a PDF file to AWS
  * 1. Gets presigned URL from Lambda (creates session)
  * 2. Uploads file directly to S3
  * 3. S3 upload triggers LlamaParse Lambda automatically
- *
- * @param {File} file - The PDF file to upload
- * @param {function} onProgress - Optional callback for upload progress (0-100)
- * @returns {Promise<{sessionId: string}>} - The session ID for querying later
  */
-export async function uploadPDF(file, onProgress) {
-  //  Get presigned URL from LlamaGet Lambda
+export async function uploadPDF(
+  file: File,
+  onProgress?: UploadProgressCallback
+): Promise<{ sessionId: string }> {
   const { sessionId, uploadUrl } = await getPresignedUploadUrl();
-
-  //  Upload directly to S3 (this triggers LlamaParse )
   await uploadFileToS3(uploadUrl, file, onProgress);
-
   return { sessionId };
 }
 
-
-
 /**
  * Query the RAG pipeline with a question
- * @param {string} sessionId - The session ID from uploadPDF
- * @param {string} query - The user's question
- * @returns {Promise<{sessionId: string, answer: string}>}
  */
-
-
-export async function queryRAG(sessionId, query) {
+export async function queryRAG(sessionId: string, query: string): Promise<QueryResponse> {
   const response = await fetch(`${API_BASE}/query`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       sessionId,
