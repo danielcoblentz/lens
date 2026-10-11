@@ -53,6 +53,13 @@ def lambda_handler(event, context):
         return {"statusCode": 404, "headers": CORS_HEADERS,
                 "body": json.dumps({"error": "Invalid sessionId"})}
 
+    # answering before parsing finishes would search a partial or empty set of chunks
+    status = session["Item"].get("status")
+    if status != "READY_FOR_QUERY":
+        message = session["Item"].get("error") or "The document is still being processed."
+        return {"statusCode": 409, "headers": CORS_HEADERS,
+                "body": json.dumps({"error": message, "status": status})}
+
     # embed the question so we can compare against stored chunk embeddings
     embed_start = time.time()
     query_embedding = get_query_embedding(question)

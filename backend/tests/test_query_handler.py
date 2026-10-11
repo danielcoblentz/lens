@@ -12,7 +12,7 @@ def handler(load_handler):
     )
 
     module.sessions_table = mock.Mock()
-    module.sessions_table.get_item.return_value = {"Item": {"sessionId": "s1"}}
+    module.sessions_table.get_item.return_value = {"Item": {"sessionId": "s1", "status": "READY_FOR_QUERY"}}
     module.chunks_table = mock.Mock()
     module.openai_client = mock.Mock()
     module.openai_client.embeddings.create.return_value.data = [mock.Mock(embedding=[1.0, 0.0])]
@@ -57,6 +57,27 @@ def test_returns_404_for_an_unknown_session(handler):
 
     assert status == 404
     assert body["error"] == "Invalid sessionId"
+
+
+def test_returns_409_while_the_document_is_still_processing(handler):
+    handler.sessions_table.get_item.return_value = {"Item": {"sessionId": "s1", "status": "PROCESSING"}}
+
+    status, body = invoke(handler)
+
+    assert status == 409
+    assert body == {"error": "The document is still being processed.", "status": "PROCESSING"}
+    handler.openai_client.embeddings.create.assert_not_called()
+
+
+def test_returns_409_with_the_parse_error_for_a_failed_document(handler):
+    handler.sessions_table.get_item.return_value = {
+        "Item": {"sessionId": "s1", "status": "ERROR", "error": "No text could be extracted from this PDF."}
+    }
+
+    status, body = invoke(handler)
+
+    assert status == 409
+    assert body["error"] == "No text could be extracted from this PDF."
 
 
 def test_returns_404_when_the_session_has_no_chunks(handler):

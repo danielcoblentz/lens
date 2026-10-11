@@ -83,7 +83,7 @@ All routes are fronted by API Gateway.
 { "sessionId": "…", "answer": "…", "metrics": { "embedding_time_ms": 0, "similarity_search_time_ms": 0, "chunks_searched": 0, "llm_time_ms": 0, "total_time_ms": 0, "top_chunk_similarity": 0 } }
 ```
 
-Returns 404 if the session is unknown or has no chunks yet.
+Returns 404 if the session is unknown or has no chunks, and 409 with the session `status` until parsing has finished.
 
 `GET /sessions/{sessionId}`:
 
