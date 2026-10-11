@@ -5,6 +5,12 @@ import { queryRAG } from "../../services/aws";
 
 jest.mock("../../services/aws");
 
+const mockedQueryRAG = queryRAG as jest.MockedFunction<typeof queryRAG>;
+
+function answer(text: string) {
+  return { sessionId: "session-1", answer: text };
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
 });
@@ -35,7 +41,7 @@ describe("ChatBox with a selected document", () => {
   });
 
   test("sends the question and renders the answer", async () => {
-    queryRAG.mockResolvedValue({ answer: "Either party may terminate on 30 days notice." });
+    mockedQueryRAG.mockResolvedValue(answer("Either party may terminate on 30 days notice."));
     render(<ChatBox sessionId="session-1" />);
 
     await userEvent.type(
@@ -52,7 +58,7 @@ describe("ChatBox with a selected document", () => {
   });
 
   test("clears the input after sending", async () => {
-    queryRAG.mockResolvedValue({ answer: "ok" });
+    mockedQueryRAG.mockResolvedValue(answer("ok"));
     render(<ChatBox sessionId="session-1" />);
 
     const input = screen.getByPlaceholderText("Ask a question...");
@@ -72,7 +78,7 @@ describe("ChatBox with a selected document", () => {
   });
 
   test("sends on the Enter key", async () => {
-    queryRAG.mockResolvedValue({ answer: "ok" });
+    mockedQueryRAG.mockResolvedValue(answer("ok"));
     render(<ChatBox sessionId="session-1" />);
 
     await userEvent.type(
@@ -84,7 +90,7 @@ describe("ChatBox with a selected document", () => {
   });
 
   test("shows the error message when the query fails", async () => {
-    queryRAG.mockRejectedValue(new Error("No chunks found"));
+    mockedQueryRAG.mockRejectedValue(new Error("No chunks found"));
     jest.spyOn(console, "error").mockImplementation(() => {});
     render(<ChatBox sessionId="session-1" />);
 

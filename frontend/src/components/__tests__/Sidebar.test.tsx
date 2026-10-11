@@ -1,8 +1,17 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Sidebar from "../Sidebar";
+import { FileMeta, UploadPhase, UploadStatus } from "../../types";
 
-const files = [{ name: "lease.pdf" }, { name: "nda.pdf" }];
+function file(name: string): FileMeta {
+  return { name, size: 1024, type: "application/pdf", lastModified: 0 };
+}
+
+function status(phase: UploadPhase, progress = 100): UploadStatus {
+  return { status: phase, progress, sessionId: null };
+}
+
+const files = [file("lease.pdf"), file("nda.pdf")];
 
 test("renders the file list", () => {
   render(<Sidebar files={files} onSelect={() => {}} />);
@@ -32,7 +41,7 @@ test("shows upload progress while a file is uploading", () => {
     <Sidebar
       files={files}
       onSelect={() => {}}
-      uploadStatus={{ "lease.pdf": { status: "uploading", progress: 42 } }}
+      uploadStatus={{ "lease.pdf": status("uploading", 42) }}
     />
   );
 
@@ -42,12 +51,12 @@ test("shows upload progress while a file is uploading", () => {
 test("shows each terminal status label", () => {
   render(
     <Sidebar
-      files={[{ name: "a.pdf" }, { name: "b.pdf" }, { name: "c.pdf" }]}
+      files={[file("a.pdf"), file("b.pdf"), file("c.pdf")]}
       onSelect={() => {}}
       uploadStatus={{
-        "a.pdf": { status: "processing" },
-        "b.pdf": { status: "ready" },
-        "c.pdf": { status: "error" },
+        "a.pdf": status("processing"),
+        "b.pdf": status("ready"),
+        "c.pdf": status("error"),
       }}
     />
   );

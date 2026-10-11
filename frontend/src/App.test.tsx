@@ -1,8 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import App from "./App";
 
-// react-pdf ships as ESM, which jest cannot parse in CJS. The viewer is not
-// what these routing tests are about.
+// react-pdf ships as esm, which jest cannot parse, and these tests only cover the layout
 jest.mock("./components/FileViewer", () => () => <div data-testid="file-viewer" />);
 
 jest.mock("./services/aws");
