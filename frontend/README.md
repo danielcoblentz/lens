@@ -19,7 +19,7 @@ React + TypeScript + react-pdf UI for uploading PDFs, viewing pages, and chattin
 Add your API base and any defaults via environment variables (CRA uses `REACT_APP_*`):
 - `REACT_APP_API_BASE` - API Gateway base URL (e.g., `https://xyz.execute-api.us-east-1.amazonaws.com/Prod`). This is the only variable the app reads.
 
-`services/aws.ts` posts to `${REACT_APP_API_BASE}/llamaGet` and `${REACT_APP_API_BASE}/query`. Keep secrets out of the frontend; only non-sensitive URLs belong in env files.
+`services/aws.ts` posts to `${REACT_APP_API_BASE}/llamaGet` and `${REACT_APP_API_BASE}/query`, and polls `${REACT_APP_API_BASE}/sessions/{sessionId}` after an upload until parsing finishes. Keep secrets out of the frontend; only non-sensitive URLs belong in env files.
 
 ## Requirements
 - Node 18+

@@ -5,9 +5,10 @@ import { FileMeta, UploadPhase, UploadStatus } from "../types";
 interface StatusBadgeProps {
   status: UploadPhase;
   progress: number;
+  error?: string;
 }
 
-function StatusBadge({ status, progress }: StatusBadgeProps) {
+function StatusBadge({ status, progress, error }: StatusBadgeProps) {
   const getStatusStyle = () => {
     switch (status) {
       case "uploading":
@@ -39,7 +40,7 @@ function StatusBadge({ status, progress }: StatusBadgeProps) {
   };
 
   return (
-    <span style={{ ...styles.badge, ...getStatusStyle() }}>
+    <span style={{ ...styles.badge, ...getStatusStyle() }} title={error}>
       {getStatusText()}
     </span>
   );
@@ -70,7 +71,7 @@ function Sidebar({ files, onSelect, uploadStatus = {} }: SidebarProps) {
             >
               <div style={styles.fileName}>{file.name}</div>
               {status && (
-                <StatusBadge status={status.status} progress={status.progress} />
+                <StatusBadge status={status.status} progress={status.progress} error={status.error} />
               )}
             </div>
           );

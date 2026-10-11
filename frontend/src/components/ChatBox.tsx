@@ -4,9 +4,10 @@ import { Message } from "../types";
 
 interface ChatBoxProps {
   sessionId: string | null;
+  processing?: boolean;
 }
 
-function ChatBox({ sessionId }: ChatBoxProps) {
+function ChatBox({ sessionId, processing = false }: ChatBoxProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -63,7 +64,9 @@ function ChatBox({ sessionId }: ChatBoxProps) {
         <input
           style={styles.input}
           value={input}
-          placeholder={sessionId ? "Ask a question..." : "Select a document first"}
+          placeholder={
+            sessionId ? "Ask a question..." : processing ? "Processing document..." : "Select a document first"
+          }
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && !isLoading && handleSend()}
           disabled={isLoading || !sessionId}

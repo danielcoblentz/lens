@@ -1,18 +1,25 @@
-import React, { useState, useRef, ChangeEvent } from "react";
+import React, { useState, useRef, useEffect, ChangeEvent } from "react";
 import Sidebar from "../components/Sidebar";
 import FileViewer from "../components/FileViewer";
 import ChatBox from "../components/ChatBox";
-import { uploadPDF } from "../services/aws";
+import { uploadPDF, waitForSession } from "../services/aws";
 import { FileMeta, UploadStatus } from "../types";
 
 function Home() {
   const [filesMeta, setFilesMeta] = useState<FileMeta[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [selectedName, setSelectedName] = useState<string | null>(null);
   // keyed by file name
   const [uploadStatus, setUploadStatus] = useState<Record<string, UploadStatus>>({});
   // the file objects themselves, which react-pdf needs to render
   const filesRef = useRef<File[]>([]);
+  // stops any status polling when the page goes away
+  const pollingRef = useRef(new AbortController());
+
+  useEffect(() => {
+    const polling = pollingRef.current;
+    return () => polling.abort();
+  }, []);
 
   const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || []);
@@ -53,15 +60,16 @@ function Home() {
           [file.name]: { progress: 100, status: "processing", sessionId },
         }));
 
-        // the backend has no status endpoint yet, so assume parsing finishes within 10 seconds
-        setTimeout(() => {
-          setUploadStatus((prev) => ({
-            ...prev,
-            [file.name]: { ...prev[file.name], status: "ready" },
-          }));
-        }, 10000);
-
+        const result = await waitForSession(sessionId, { signal: pollingRef.current.signal });
+        setUploadStatus((prev) => ({
+          ...prev,
+          [file.name]:
+            result.status === "READY_FOR_QUERY"
+              ? { progress: 100, status: "ready", sessionId }
+              : { progress: 100, status: "error", sessionId, error: result.error },
+        }));
       } catch (error) {
+        if (pollingRef.current.signal.aborted) return;
         console.error("Upload failed:", error);
         setUploadStatus((prev) => ({
           ...prev,
@@ -84,11 +92,12 @@ function Home() {
         f.lastModified === fileMeta.lastModified);
 
     setSelectedFile(actualFile || null);
-
-    const status = uploadStatus[fileMeta.name];
-    // a file still uploading has no session yet, so chat stays disabled
-    setActiveSessionId(status?.sessionId || null);
+    setSelectedName(fileMeta.name);
   };
+
+  // chat only opens once the selected document can be queried, and follows its status as it changes
+  const selectedStatus = selectedName ? uploadStatus[selectedName] : undefined;
+  const chatSessionId = selectedStatus?.status === "ready" ? selectedStatus.sessionId : null;
 
   return (
     <div style={{ display: "flex", height: "100vh" }}>
@@ -106,7 +115,7 @@ function Home() {
         </div>
       </div>
 
-      <ChatBox sessionId={activeSessionId} />
+      <ChatBox sessionId={chatSessionId} processing={selectedStatus?.status === "processing"} />
 
     </div>
   );

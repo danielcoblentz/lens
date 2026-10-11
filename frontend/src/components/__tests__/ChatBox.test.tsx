@@ -32,6 +32,15 @@ describe("ChatBox without a selected document", () => {
   });
 });
 
+describe("ChatBox while the selected document is processing", () => {
+  test("says so and stays disabled", () => {
+    render(<ChatBox sessionId={null} processing />);
+
+    expect(screen.getByPlaceholderText("Processing document...")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
+  });
+});
+
 describe("ChatBox with a selected document", () => {
   test("enables the input once a session exists", () => {
     render(<ChatBox sessionId="session-1" />);
