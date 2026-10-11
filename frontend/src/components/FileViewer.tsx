@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/TextLayer.css";
 import "react-pdf/dist/Page/AnnotationLayer.css";
@@ -6,9 +6,13 @@ import "react-pdf/dist/Page/AnnotationLayer.css";
 // served from public/ so the bundler never transforms it, see the copy-pdf-worker script
 pdfjs.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.mjs`;
 
-function FileViewer({ selectedFile }) {
-  const [fileUrl, setFileUrl] = useState(null);
-  const [numPages, setNumPages] = useState(null);
+interface FileViewerProps {
+  selectedFile: File | null;
+}
+
+function FileViewer({ selectedFile }: FileViewerProps) {
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [numPages, setNumPages] = useState<number | null>(null);
 
   useEffect(() => {
     if (!selectedFile) {
@@ -48,7 +52,7 @@ function FileViewer({ selectedFile }) {
 }
 
 // Inline styles for the PDF viewer
-const styles = {
+const styles: Record<string, React.CSSProperties> = {
   viewer: {
     padding: "2rem",
     overflowY: "auto",

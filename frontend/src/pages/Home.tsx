@@ -1,17 +1,20 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, ChangeEvent } from "react";
 import Sidebar from "../components/Sidebar";
 import FileViewer from "../components/FileViewer";
 import ChatBox from "../components/ChatBox";
 import { uploadPDF } from "../services/aws";
+import { FileMeta, UploadStatus } from "../types";
 
 function Home() {
-  const [filesMeta, setFilesMeta] = useState([]);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [activeSessionId, setActiveSessionId] = useState(null);
-  const [uploadStatus, setUploadStatus] = useState({});               // { [fileName]: { progress, status, sessionId } }
-  const filesRef = useRef([]); // file objects
+  const [filesMeta, setFilesMeta] = useState<FileMeta[]>([]);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  // keyed by file name
+  const [uploadStatus, setUploadStatus] = useState<Record<string, UploadStatus>>({});
+  // the File objects themselves, which react-pdf needs to render
+  const filesRef = useRef<File[]>([]);
 
-  const handleUpload = async (e) => {
+  const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || []);
 
     for (const file of selected) {
@@ -54,24 +57,30 @@ function Home() {
           [file.name]: { progress: 100, status: "processing", sessionId },
         }));
 
-        // assume processing is complete after 10 sec default (changing this later to be a response after the doc is done processing once recieved it will update UI)
-        
+        // the backend has no status endpoint yet, so assume parsing finishes within 10 seconds
         setTimeout(() => {
           setUploadStatus((prev) => ({
             ...prev,
-            [file.name]: { ...prev[file.name], status: "ready" },}));}, 10000);
+            [file.name]: { ...prev[file.name], status: "ready" },
+          }));
+        }, 10000);
 
       } catch (error) {
         console.error("Upload failed:", error);
         setUploadStatus((prev) => ({
           ...prev,
-          [file.name]: { progress: 0, status: "error", error: error.message },
+          [file.name]: {
+            progress: 0,
+            status: "error",
+            sessionId: null,
+            error: error instanceof Error ? error.message : String(error),
+          },
         }));
       }
     }
   };
 
-  const handleSelect = (fileMeta) => {
+  const handleSelect = (fileMeta: FileMeta) => {
     // find the file object that matches the metadata
     const actualFile = filesRef.current.find(
       (f) =>
