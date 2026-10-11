@@ -23,7 +23,7 @@ The pure logic is kept out of the handlers so it can be tested without AWS or Op
 need their dependencies vendored into the deployment package:
 
 ```bash
-pip install PyPDF2 openai -t LlamaParse
+pip install -r LlamaParse/requirements.txt -t LlamaParse
 pip install -r LlamaQuery/requirements.txt -t LlamaQuery
 ```
 

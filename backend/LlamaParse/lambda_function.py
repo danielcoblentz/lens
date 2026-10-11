@@ -2,7 +2,7 @@ import json
 import boto3
 import os
 from decimal import Decimal
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 from openai import OpenAI
 
 from chunking import recursive_chunk_text
