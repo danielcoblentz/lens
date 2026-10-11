@@ -4,6 +4,8 @@ A serverless document analysis tool that lets users upload legal contracts and a
 
 ## System Design
 
+![Lens architecture](docs/architecture.png)
+
 The source diagram lives in [`docs/architecture.excalidraw`](docs/architecture.excalidraw), which you can open at [excalidraw.com](https://excalidraw.com).
 
 The system is split into three Lambda functions connected by S3 events and API Gateway:
