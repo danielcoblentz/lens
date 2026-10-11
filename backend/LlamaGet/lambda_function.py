@@ -2,7 +2,7 @@ import json
 import boto3
 import uuid
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 s3_client = boto3.client("s3")
 dynamodb_resource = boto3.resource("dynamodb")
@@ -32,7 +32,7 @@ def lambda_handler(event, context):
         Item={
             "sessionId": new_session_id,
             "status": "AWAITING_UPLOAD",
-            "createdAt": datetime.utcnow().isoformat(),
+            "createdAt": datetime.now(timezone.utc).isoformat(),
             "s3Key": s3_object_key
         }
     )
